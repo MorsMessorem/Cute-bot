@@ -1,21 +1,24 @@
 
 import os 
-from types import resolve_bases
 import discord
-from discord import message
-from discord import user
-from discord import emoji
-from discord.abc import User
-from discord.client import Client
-from discord.embeds import Embed
-from discord.ext import commands
-from discord.ext.commands.errors import CommandInvokeError, CommandOnCooldown, MissingRequiredArgument
-from discord.utils import find
-from discord.utils import get
-from discord.ext.commands import CommandNotFound
-from random import randint, seed, random
 import json
 import requests
+
+from discord.client import Client
+from discord.ext import commands
+from keep_alive import keep_alive
+
+# from types import resolve_bases
+# from discord import message
+# from discord import user
+# from discord import emoji
+# from discord.abc import User
+# from discord.embeds import Embed
+# from discord.ext.commands.errors import CommandInvokeError, CommandOnCooldown, MissingRequiredArgument, CommandNotFound
+# from discord.utils import find
+# from discord.utils import get
+# from random import randint, seed, random
+
 
 intents = discord.Intents.default()
 intents.members = True
@@ -24,32 +27,52 @@ client = commands.Bot(command_prefix=prefix,intents=intents)
 client.remove_command('help')
 
 
-client.run(os.environ['TOKEN'])
 
 min_crit = 111
 max_crit =  9   *(1+2*2+3*3+4*4+5*4)+\
             10  *(2*2+3*3+4*4+5*3)+\
-            21  *(3*3+4*4+5*3)+\
-            31  *(4*4+5*4)+\
+            22  *(3*3+4*4+5*3)+\
+            32  *(4*4+5*4)+\
             min_crit
+version = "7.1.1"
 
 @client.event
 async def on_ready():
     print('We have logged in as {0.user}'.format(client))
 
 @client.event
-async def on_command_error(message, error):
-    if isinstance(error, CommandNotFound):
-        print(error)
-        return await message.channel.send("Command not found")
-    if isinstance(error, MissingRequiredArgument):
-        print(error)
-        message.command.reset_cooldown(message)
-        return await message.channel.send('Not enouh arguments, try something else')
-    if isinstance(error, CommandOnCooldown):
-        print(error)
-        return await message.channel.send(error)
-    raise error
+async def on_message(message):
+    find_text = ['bark','meow']
+    send_answer = ['***hiss***','Here, Kitty Kitty!']
+    
+    find_text2 = ['how to change nickname']
+    send_answer2 = ['1-Tap your profile pic, go to manage and tap it, type in nickname.\n2-Or try slash command: /nick `nickname | class | crit`']
+
+    for i in range(len(find_text)):
+        if message.content.lower().find(find_text[i])!=-1:
+            await message.reply(send_answer[i])  
+
+    for i in range(len(find_text2)):
+        if message.content.lower().find(find_text2[i])!=-1:
+            await message.channel.send(send_answer2[i])
+
+    await client.process_commands(message)
+
+
+
+# @client.event
+# async def on_command_error(message, error):
+#     if isinstance(error, CommandNotFound):
+#         print(error)
+#         return await message.channel.send("Command not found")
+#     if isinstance(error, MissingRequiredArgument):
+#         print(error)
+#         message.command.reset_cooldown(message)
+#         return await message.channel.send('Not enouh arguments, try something else')
+#     if isinstance(error, CommandOnCooldown):
+#         print(error)
+#         return await message.channel.send(error)
+#     raise error
 
 #region Game functions
 @client.command(pass_context=True)
@@ -79,7 +102,7 @@ async def combo(ctx, _count, _class, _level=5, bonus=False):
 
 @client.command(pass_context=True)
 async def maxcrit(ctx):
-    await ctx.message.channel.send(f'maximum possible crit is {max_crit}, version: 6.7.5')
+    await ctx.message.channel.send(f'maximum possible crit is {max_crit}, version: {verison}')
 
 @client.command(pass_context=True)
 async def crit(ctx, crit_num):
@@ -242,24 +265,6 @@ async def clap(ctx):
     await ctx.message.delete()
     await ctx.message.channel.send('<a:clap:884754435631362108>')
 
-@client.event
-async def on_message(message):
-    find_text = ['bark','meow']
-    send_answer = ['***hiss***','Here, Kitty Kitty!']
-    
-    find_text2 = ['how to change nickname']
-    send_answer2 = ['1-Tap your profile pic, go to manage and tap it, type in nickname.\n2-Or try slash command: /nick `nickname | class | crit`']
-
-    for i in range(len(find_text)):
-        if message.content.lower().find(find_text[i])!=-1:
-            await message.reply(send_answer[i])  
-
-    for i in range(len(find_text2)):
-        if message.content.lower().find(find_text2[i])!=-1:
-            await message.channel.send(send_answer2[i])
-    
-    await client.process_commands(message)
-
 @client.command(aliases=['help'],pass_comtext=True)
 async def _help(ctx):
     s = 'prefix for this bot is `'+prefix+'`\n'
@@ -274,3 +279,7 @@ async def _help(ctx):
 # '''
     return await ctx.message.channel.send(s)
 
+
+keep_alive()
+token = os.environ.get("TOKEN")
+client.run(token)
